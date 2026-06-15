@@ -1,0 +1,11 @@
+# Source and Configuration
+.vscode/**
+src/**
+tsconfig.json
+esbuild.js
+package-lock.json
+node_modules/**
+logicscope-*.vsix
+*.md
+!README.md
+!CHANGELOG.md

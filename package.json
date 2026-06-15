@@ -1,0 +1,179 @@
+{
+  "name": "logicscope",
+  "displayName": "LogicScope",
+  "icon": "icon.png",
+  "description": "DSA & OOPs visualizer that generates control flow, recursion trees, and class diagrams in real-time as you type.",
+  "version": "1.0.0",
+  "publisher": "codexgamerz",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Education",
+    "Visualization"
+  ],
+  "keywords": [
+    "dsa",
+    "oops",
+    "visualizer",
+    "diagram",
+    "mermaid",
+    "python",
+    "javascript"
+  ],
+  "activationEvents": [
+    "onLanguage:python",
+    "onLanguage:javascript"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "logicscope-container",
+          "title": "LogicScope",
+          "icon": "$(eye)"
+        }
+      ]
+    },
+    "views": {
+      "logicscope-container": [
+        {
+          "type": "webview",
+          "id": "logicscope.sidebar",
+          "name": "LogicScope Controls"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "logicscope.openDiagram",
+        "title": "LogicScope: Open Diagram Panel",
+        "category": "LogicScope"
+      },
+      {
+        "command": "logicscope.refreshDiagram",
+        "title": "LogicScope: Refresh Diagram",
+        "category": "LogicScope"
+      },
+      {
+        "command": "logicscope.toggleMode",
+        "title": "LogicScope: Toggle Real-Time Mode",
+        "category": "LogicScope"
+      },
+      {
+        "command": "logicscope.explainCode",
+        "title": "LogicScope: Explain This Code",
+        "category": "LogicScope"
+      },
+      {
+        "command": "logicscope.manageAIKey",
+        "title": "LogicScope: Manage AI Key",
+        "category": "LogicScope"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "when": "editorHasSelection && (editorLangId == python || editorLangId == javascript)",
+          "command": "logicscope.explainCode",
+          "group": "logicscope@1"
+        },
+        {
+          "when": "editorLangId == python || editorLangId == javascript",
+          "command": "logicscope.refreshDiagram",
+          "group": "logicscope@2"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "LogicScope",
+      "properties": {
+        "logicscope.debounceMs": {
+          "type": "integer",
+          "default": 300,
+          "description": "Debounce delay in milliseconds before parsing code after editing.",
+          "minimum": 100,
+          "maximum": 2000
+        },
+        "logicscope.realTimeMode": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "manual",
+            "snapshot"
+          ],
+          "default": "auto",
+          "description": "Real-time diagram update mode: 'auto' (update as you type), 'manual' (only on refresh), 'snapshot' (only on save)."
+        },
+        "logicscope.learningMode": {
+          "type": "string",
+          "enum": [
+            "beginner",
+            "advanced"
+          ],
+          "default": "beginner",
+          "description": "Learning mode style for explanations and diagram layouts."
+        },
+        "logicscope.aiEnabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable or disable the AI explanation enrichment layer."
+        },
+        "logicscope.aiProvider": {
+          "type": "string",
+          "enum": [
+            "groq",
+            "gemini"
+          ],
+          "default": "groq",
+          "description": "Preferred AI provider for explanations."
+        },
+        "logicscope.aiModel": {
+          "type": "string",
+          "default": "llama-3.3-70b-versatile",
+          "description": "Model identifier to use with the selected AI provider."
+        },
+        "logicscope.autoExplainOnStableCode": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically run AI explanation if code has been stable for 5 seconds."
+        },
+        "logicscope.fileSizeWarningLines": {
+          "type": "integer",
+          "default": 500,
+          "description": "File size threshold (in lines) to warn about performance and auto-switch to Snapshot mode."
+        },
+        "logicscope.diagramTheme": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "default",
+            "dark",
+            "forest",
+            "neutral"
+          ],
+          "default": "auto",
+          "description": "Mermaid diagram theme. 'auto' matches VS Code's theme."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "vscode:prepublish": "node esbuild.js --minify",
+    "test": "node dist/test/parser.test.js",
+    "stress": "node dist/test/stress.test.js"
+  },
+  "dependencies": {
+    "web-tree-sitter": "^0.22.6"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "esbuild": "^0.20.1",
+    "tree-sitter-wasms": "^0.1.11",
+    "typescript": "^5.3.3"
+  }
+}
