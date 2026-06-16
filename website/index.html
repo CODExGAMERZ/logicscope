@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LogicScope - Real-Time Code-to-Diagram Visualizer in VS Code</title>
+  
+  <!-- Favicon & App Icon -->
+  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="apple-touch-icon" href="logo.png">
+  <meta property="og:image" content="logo.png">
+  
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="LogicScope is an offline real-time DSA and OOP code visualizer extension for VS Code. Generate flowcharts, class UMLs, and recursion trees instantly.">
+  <meta name="keywords" content="VS Code Extension, Code Visualizer, Control Flow, UML Diagrams, Recursion Trees, Tree-sitter AST, Mermaid.js">
+  <meta name="author" content="CODExGAMERZ">
+  
+  <!-- Fonts & Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- Mermaid.js for Rendering Diagrams -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.2.4/dist/mermaid.min.js"></script>
+</head>
+<body>
+
+  <!-- Background Decorative Grid -->
+  <div class="grid-overlay" id="gridOverlay"></div>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar" id="navbar">
+    <div class="container navbar-container">
+      <a href="#" class="logo">
+        <img src="logo.png" alt="LogicScope Logo" class="logo-img">
+        LogicScope
+      </a>
+      <div class="nav-links">
+        <a href="#playground" class="active">Playground</a>
+        <a href="#features">Features</a>
+        <a href="#install">Install</a>
+      </div>
+      <div class="nav-actions">
+        <a href="#install" class="btn-nav-download">Get Extension</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <header class="hero section-padding">
+    <div class="container">
+      <div class="hero-badge-container">
+        <span class="badge badge-indigo badge-glow"><i class="fa-solid fa-bolt"></i> Version 1.0.0 Stable</span>
+        <span class="badge badge-indigo"><i class="fa-solid fa-code"></i> Real-time DSA</span>
+      </div>
+      <h1>Visual flowcharts from code.<br><span class="text-gradient">Generated instantly as you type.</span></h1>
+      <p>LogicScope translates your Python or JavaScript code into high-fidelity control flowcharts, class UML diagrams, and recursion paths. Debug structure and understand complexity—completely offline and in real-time.</p>
+      
+      <div class="hero-ctas">
+        <a href="#playground" class="btn-primary"><i class="fa-solid fa-play"></i> Open Web Playground</a>
+        <a href="#install" class="btn-secondary"><i class="fa-solid fa-download"></i> View on Marketplace</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Interactive IDE Playground Section -->
+  <section id="playground" class="simulator-showcase">
+    <div class="container">
+      <div class="section-title">Interactive Visualizer Playground</div>
+      <p class="section-subtitle">Type or edit Python/JavaScript code in the mockup editor on the left. The compiler parses your AST and reconstructs interactive diagrams on the canvas in real-time.</p>
+      
+      <!-- VS Code Extension Frame -->
+      <div class="vscode-frame" id="scopeSimulator">
+        
+        <!-- VS Code Header/Tab Bar -->
+        <header class="vscode-header">
+          <div class="window-controls">
+            <span class="control-dot close"></span>
+            <span class="control-dot minimize"></span>
+            <span class="control-dot maximize"></span>
+          </div>
+          
+          <div class="vscode-tabs-bar">
+            <div class="tab-title active" id="editor-tab">
+              <i class="fa-brands fa-js-square text-warning" id="editor-tab-icon"></i>
+              <span id="editor-tab-filename">script.js</span>
+              <span class="tab-close">&times;</span>
+            </div>
+          </div>
+          
+          <div class="vscode-actions">
+            <!-- Mode Switcher -->
+            <select class="mode-select" id="vis-mode-select" title="Diagram Render Mode">
+              <option value="auto">Auto-Detect Mode</option>
+              <option value="flowchart">Control Flowchart</option>
+              <option value="class">UML Class Diagram</option>
+              <option value="recursion">Recursion Tree</option>
+            </select>
+            <button class="btn-sim-control success" id="btn-run-code" title="Refresh Diagram"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+          </div>
+        </header>
+
+        <!-- VS Code Body Wrapper -->
+        <div class="vscode-body-wrapper">
+          
+          <!-- VS Code Left Activity Bar -->
+          <aside class="vscode-activitybar">
+            <div class="activity-top">
+              <div class="activity-item"><i class="fa-regular fa-copy"></i></div>
+              <div class="activity-item"><i class="fa-solid fa-magnifying-glass"></i></div>
+              <div class="activity-item"><i class="fa-solid fa-code-branch"></i></div>
+              <div class="activity-item active"><i class="fa-solid fa-diagram-project"></i></div>
+            </div>
+            <div class="activity-bottom">
+              <div class="activity-item"><i class="fa-solid fa-gear"></i></div>
+            </div>
+          </aside>
+
+          <!-- Main Work Space -->
+          <div class="vscode-body">
+            <div class="split-workspace">
+              
+              <!-- Left: Monaco Editor Mockup -->
+              <div class="editor-pane">
+                <div class="pane-header">
+                  <span><i class="fa-solid fa-code text-muted"></i> Source Code</span>
+                  <div class="editor-languages">
+                    <button class="lang-btn active" data-lang="javascript">JavaScript</button>
+                    <button class="lang-btn" data-lang="python">Python</button>
+                  </div>
+                </div>
+                
+                <div class="editor-container">
+                  <div class="line-numbers" id="line-numbers-col">
+                    <!-- Dynamic -->
+                  </div>
+                  <textarea class="code-textarea" id="code-textarea" spellcheck="false" autocomplete="off" wrap="off"></textarea>
+                </div>
+              </div>
+              
+              <!-- Center: Resizable Divider -->
+              <div class="pane-divider"></div>
+              
+              <!-- Right: Diagram Canvas Pane -->
+              <div class="canvas-pane">
+                <div class="pane-header">
+                  <span><i class="fa-solid fa-image text-muted"></i> LogicScope Canvas</span>
+                  
+                  <div class="canvas-toolbar">
+                    <button class="toolbar-btn" id="btn-zoom-in" title="Zoom In"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+                    <button class="toolbar-btn" id="btn-zoom-out" title="Zoom Out"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
+                    <button class="toolbar-btn" id="btn-zoom-reset" title="Reset Zoom"><i class="fa-solid fa-expand"></i></button>
+                  </div>
+                </div>
+                
+                <!-- Diagram Render Area -->
+                <div class="canvas-viewport" id="canvas-viewport">
+                  <div class="mermaid-diagram" id="diagram-container">
+                    <!-- Mermaid will render here -->
+                  </div>
+                  
+                  <!-- Fallback indicator when code is empty/errored -->
+                  <div class="canvas-message hidden" id="canvas-status-message">
+                    <div class="spinner hidden" id="canvas-spinner"></div>
+                    <span id="canvas-message-text">Analyzing AST...</span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Right Sidebar: Complexity Stats -->
+              <aside class="sidebar-pane">
+                <div class="pane-header">
+                  <span><i class="fa-solid fa-square-poll-vertical text-muted"></i> Metrics</span>
+                </div>
+                
+                <div class="sidebar-content">
+                  <div class="stat-card">
+                    <span class="label">Time Complexity</span>
+                    <span class="value accent" id="stat-time">O(1)</span>
+                    <span class="desc" id="stat-time-desc">Constant execution flow</span>
+                  </div>
+                  
+                  <div class="stat-card">
+                    <span class="label">Space Complexity</span>
+                    <span class="value" id="stat-space">O(1)</span>
+                    <span class="desc" id="stat-space-desc">No dynamic allocation</span>
+                  </div>
+
+                  <div class="stat-card">
+                    <span class="label">Recursion Depth</span>
+                    <span class="value" id="stat-recursion">0</span>
+                    <span class="desc" id="stat-recursion-desc">Non-recursive algorithm</span>
+                  </div>
+
+                  <div class="stat-card">
+                    <span class="label">AST Nodes Count</span>
+                    <span class="value" id="stat-ast-nodes">0</span>
+                    <span class="desc">Constructed tree size</span>
+                  </div>
+                  
+                  <div class="stat-card">
+                    <span class="label">Cyclomatic Complexity</span>
+                    <span class="value" id="stat-cyclomatic">1</span>
+                    <span class="desc" id="stat-cyclomatic-desc">Linearly independent paths</span>
+                  </div>
+                </div>
+              </aside>
+              
+            </div>
+          </div>
+        </div>
+
+        <!-- VS Code Footer Status Bar -->
+        <footer class="vscode-footer">
+          <div class="footer-left">
+            <span class="status-item bg-indigo"><i class="fa-solid fa-code-branch"></i> main</span>
+            <span class="status-item" id="footer-status-lang">JavaScript (ES6)</span>
+            <span class="status-item" id="footer-status-status"><i class="fa-solid fa-check"></i> AST Healthy</span>
+          </div>
+          <div class="footer-right">
+            <span class="status-item">Mermaid v10</span>
+            <span class="status-item">UTF-8</span>
+            <span class="status-item">Line 1, Col 1</span>
+          </div>
+        </footer>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Grid Section -->
+  <section id="features" class="section-padding bg-darker">
+    <div class="container">
+      <div class="section-title">Diagram Visualizer Features</div>
+      <p class="section-subtitle">LogicScope compiles active syntax trees into visual structures, removing the mental stack load from developers.</p>
+      
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="icon">🌿</div>
+          <h3>Control Flowcharts</h3>
+          <p>Maps loops, branches, breaks, returns, and jumps into standardized Mermaid.js flowcharts automatically.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">🕸️</div>
+          <h3>Recursion Call Trees</h3>
+          <p>Traces stack frames, argument states, and base cases to outline recursion stacks as visual graphs.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">🏛️</div>
+          <h3>UML Class Diagrams</h3>
+          <p>Extracts fields, method signatures, modifiers, and relationships to construct object-oriented models.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">📐</div>
+          <h3>Complexity Auditing</h3>
+          <p>Estimates time/space complexities and cyclomatic parameters fully locally from AST structures.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Installation Section -->
+  <section id="install" class="section-padding">
+    <div class="container">
+      <div class="section-title">Install LogicScope inside VS Code</div>
+      <p class="section-subtitle">LogicScope works completely local. Install the extension in your workspace environment now.</p>
+      
+      <div class="install-card">
+        <div class="install-header">
+          <span>VS Code Marketplace</span>
+          <i class="fa-solid fa-terminal"></i>
+        </div>
+        <div class="install-body">
+          <code>ext install CODExGAMERZ.logicscope</code>
+          <button class="btn-copy-command" onclick="navigator.clipboard.writeText('ext install CODExGAMERZ.logicscope'); alert('Command copied to clipboard!')"><i class="fa-solid fa-copy"></i> Copy</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <p>&copy; 2026 LogicScope. Built by <a href="https://github.com/CODExGAMERZ">CODExGAMERZ</a>. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="app.js"></script>
+</body>
+</html>
