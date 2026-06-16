@@ -79,7 +79,10 @@ LogicScope is built with security and performance in mind:
 
 ## 🌐 Standalone Web Playground
 
-LogicScope includes a standalone visualizer playground hosted as a vanilla HTML5/CSS3 static app. It provides a real-time sandbox for writing Python/JavaScript code and rendering interactive Mermaid flowcharts, class UMLs, and recursion call trees directly inside any web browser.
+LogicScope includes a standalone visualizer playground hosted as a vanilla HTML5/CSS3 static app. It is deployed on Vercel:
+👉 **[Launch LogicScope Playground](https://logicscope.vercel.app/)**
+
+It provides a real-time sandbox for writing Python/JavaScript code and rendering interactive Mermaid flowcharts, class UMLs, and recursion call trees directly inside any web browser.
 
 ### Preview Locally
 To run the visualizer playground locally:
