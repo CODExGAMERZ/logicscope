@@ -38,11 +38,25 @@ document.addEventListener('DOMContentLoaded', () => {
   const statCyclomatic = document.getElementById('stat-cyclomatic');
   const statCyclomaticDesc = document.getElementById('stat-cyclomatic-desc');
 
+  // Controls in right sidebar
+  const visThemeSelect = document.getElementById('vis-theme-select');
+  const visOrientSelect = document.getElementById('vis-orient-select');
+
   // Buttons
   const zoomInBtn = document.getElementById('btn-zoom-in');
   const zoomOutBtn = document.getElementById('btn-zoom-out');
   const zoomResetBtn = document.getElementById('btn-zoom-reset');
   const langBtns = document.querySelectorAll('.editor-languages .lang-btn');
+
+  // Bottom Console Elements
+  const consolePanel = document.getElementById('console-panel');
+  const consoleViewport = document.getElementById('console-viewport');
+  const btnToggleConsole = document.getElementById('btn-toggle-console');
+  const btnClearConsole = document.getElementById('btn-clear-console');
+  const consoleTabs = document.querySelectorAll('.console-tab-item');
+
+  // File explorer elements
+  const fileItems = document.querySelectorAll('#file-tree .file-item');
 
   // State
   let activeLang = 'javascript';
@@ -56,31 +70,46 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- Sample Codes Database ---
   const samples = {
     javascript: {
-      flowchart: `function findMax(arr) {
-  let max = arr[0];
-  for (let i = 1; i < arr.length; i++) {
-    if (arr[i] > max) {
-      max = arr[i];
+      flowchart: `function binarySearch(arr, target) {
+  let low = 0;
+  let high = arr.length - 1;
+  while (low <= high) {
+    let mid = Math.floor((low + high) / 2);
+    if (arr[mid] === target) {
+      return mid;
+    } else if (arr[mid] < target) {
+      low = mid + 1;
+    } else {
+      high = mid - 1;
     }
   }
-  return max;
+  return -1;
 }`,
-      class: `class Animal {
-  constructor(name) {
-    this.name = name;
-  }
-  speak() {
-    return "noise";
+      class: `class Node {
+  constructor(value) {
+    this.value = value;
+    this.next = null;
   }
 }
 
-class Dog extends Animal {
-  constructor(name, breed) {
-    super(name);
-    this.breed = breed;
+class LinkedList {
+  constructor() {
+    this.head = null;
+    this.size = 0;
   }
-  bark() {
-    return "Woof!";
+  
+  insert(value) {
+    const node = new Node(value);
+    if (!this.head) {
+      this.head = node;
+    } else {
+      let current = this.head;
+      while (current.next) {
+        current = current.next;
+      }
+      current.next = node;
+    }
+    this.size++;
   }
 }`,
       recursion: `function fibonacci(n) {
@@ -117,12 +146,22 @@ class Circle(Shape):
         
     def get_area(self):
         return 3.1415 * self.radius * self.radius`,
-      recursion: `def factorial(n):
+      recursion: `def recursion_fib(n):
     if n <= 1:
-        return 1
-    return n * factorial(n - 1)`
+        return n
+    return recursion_fib(n - 1) + recursion_fib(n - 2)`
     }
   };
+
+  // --- Console Print Logic ---
+  function printConsole(text, type = 'info') {
+    const time = new Date().toLocaleTimeString();
+    const line = document.createElement('div');
+    line.className = 'console-line';
+    line.innerHTML = `<span class="timestamp">[${time}]</span> <span class="${type}">${type.toUpperCase()}: ${text}</span>`;
+    consoleViewport.appendChild(line);
+    consoleViewport.scrollTop = consoleViewport.scrollHeight;
+  }
 
   // Synchronize Line Numbers Column
   function updateLineNumbers() {
@@ -141,7 +180,66 @@ class Circle(Shape):
     updateLineNumbers();
   }
 
-  // Update tabs & headers when switching languages
+  // Left File Tree switching logic
+  function selectFile(filename) {
+    fileItems.forEach(item => item.classList.remove('active'));
+    
+    const activeItem = document.querySelector(`#file-tree .file-item[data-file="${filename}"]`);
+    if (activeItem) {
+      activeItem.classList.add('active');
+    }
+
+    printConsole(`Opening file ${filename} in workspace.`, 'system');
+    editorTabFilename.textContent = filename;
+
+    if (filename === 'binarySearch.js') {
+      activeLang = 'javascript';
+      visModeSelect.value = 'flowchart';
+      
+      document.getElementById('lang-btn-js').classList.add('active');
+      document.getElementById('lang-btn-py').classList.remove('active');
+      
+      editorTabIcon.className = 'fa-brands fa-js-square text-warning';
+      footerLang.textContent = 'JavaScript (ES6)';
+      
+      loadCodeSample('javascript', 'flowchart');
+      printConsole("Compiler targeting JavaScript flowchart model.", "info");
+    } else if (filename === 'recursion_fib.py') {
+      activeLang = 'python';
+      visModeSelect.value = 'recursion';
+      
+      document.getElementById('lang-btn-js').classList.remove('active');
+      document.getElementById('lang-btn-py').classList.add('active');
+      
+      editorTabIcon.className = 'fa-brands fa-python text-primary';
+      footerLang.textContent = 'Python (v3.10)';
+      
+      loadCodeSample('python', 'recursion');
+      printConsole("Compiler targeting Python recursion tree model.", "info");
+    } else if (filename === 'linkedList_UML.js') {
+      activeLang = 'javascript';
+      visModeSelect.value = 'class';
+      
+      document.getElementById('lang-btn-js').classList.add('active');
+      document.getElementById('lang-btn-py').classList.remove('active');
+      
+      editorTabIcon.className = 'fa-brands fa-js-square text-warning';
+      footerLang.textContent = 'JavaScript (ES6)';
+      
+      loadCodeSample('javascript', 'class');
+      printConsole("Compiler targeting OOP Class UML model.", "info");
+    }
+
+    compileAndRender();
+  }
+
+  fileItems.forEach(item => {
+    item.addEventListener('click', () => {
+      selectFile(item.getAttribute('data-file'));
+    });
+  });
+
+  // Language button clicks
   langBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       langBtns.forEach(b => b.classList.remove('active'));
@@ -149,25 +247,11 @@ class Circle(Shape):
       
       activeLang = btn.getAttribute('data-lang');
       
-      // Update header
       if (activeLang === 'javascript') {
-        editorTabFilename.textContent = 'script.js';
-        editorTabIcon.className = 'fa-brands fa-js-square text-warning';
-        footerLang.textContent = 'JavaScript (ES6)';
+        selectFile('binarySearch.js');
       } else {
-        editorTabFilename.textContent = 'main.py';
-        editorTabIcon.className = 'fa-brands fa-python text-primary';
-        footerLang.textContent = 'Python (v3.10)';
+        selectFile('recursion_fib.py');
       }
-      
-      // Select appropriate mode based on selector or keep
-      let renderMode = visModeSelect.value;
-      if (renderMode === 'auto') {
-        renderMode = autoDetectMode(codeTextarea.value);
-      }
-      
-      loadCodeSample(activeLang, renderMode);
-      compileAndRender();
     });
   });
 
@@ -178,6 +262,18 @@ class Circle(Shape):
       mode = autoDetectMode(codeTextarea.value);
     }
     loadCodeSample(activeLang, mode);
+    printConsole(`Render mode changed to: ${mode}`, 'info');
+    compileAndRender();
+  });
+
+  // Theme & Orientation Change Listeners
+  visThemeSelect.addEventListener('change', () => {
+    printConsole(`Mermaid rendering theme switched to: ${visThemeSelect.value}`, 'system');
+    compileAndRender();
+  });
+
+  visOrientSelect.addEventListener('change', () => {
+    printConsole(`Layout orientation switched to: ${visOrientSelect.value}`, 'system');
     compileAndRender();
   });
 
@@ -187,7 +283,6 @@ class Circle(Shape):
     updateLineNumbers();
     clearTimeout(compileTimeout);
     
-    // Status updating
     footerStatus.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Parsing AST...';
     
     compileTimeout = setTimeout(() => {
@@ -201,14 +296,11 @@ class Circle(Shape):
       return 'class';
     }
     
-    // Simple recursion heuristic: self invocation
-    // Search for defined function names and check if they are called inside the body
     const jsFuncMatch = code.match(/function\s+(\w+)\s*\(/);
     const pyFuncMatch = code.match(/def\s+(\w+)\s*\(/);
     const funcName = jsFuncMatch ? jsFuncMatch[1] : (pyFuncMatch ? pyFuncMatch[1] : null);
     
     if (funcName) {
-      // Find count of matches of funcName
       const regex = new RegExp(funcName, 'g');
       const matches = code.match(regex);
       if (matches && matches.length > 1) {
@@ -220,33 +312,26 @@ class Circle(Shape):
   }
 
   // --- Rule-based AST Parser / Mermaid Generator ---
-  function generateMermaidString(code, mode) {
+  function generateMermaidString(code, mode, orient = 'TD') {
     if (mode === 'class') {
       return compileClassDiagram(code);
     } else if (mode === 'recursion') {
-      return compileRecursionTree(code);
+      return compileRecursionTree(code, orient);
     } else {
-      return compileFlowchart(code);
+      return compileFlowchart(code, orient);
     }
   }
 
   // UML Class compiler
   function compileClassDiagram(code) {
-    // Basic class parsing logic using regex
-    const classRegex = /class\s+(\w+)(?:\s*(?:extends|\()\s*(\w+)\s*\)?)?\s*\{?/g;
-    const methodRegex = /(\w+)\s*\([^)]*\)\s*\{|def\s+(\w+)\s*\(/g;
-    
+    const lines = code.split('\n');
     let classes = [];
     let inheritances = [];
-    let match;
-    
-    const lines = code.split('\n');
     let currentClass = null;
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
       
-      // Match class declaration
       const classDecl = /class\s+(\w+)(?:\s*(?:extends|\()\s*(\w+)\s*\)?)?/i.exec(line);
       if (classDecl) {
         const className = classDecl[1];
@@ -266,8 +351,6 @@ class Circle(Shape):
       }
       
       if (currentClass) {
-        // Find constructor properties or member variables
-        // e.g. this.name = name, self.color = color
         const propMatch = /(?:this|self)\.(\w+)\s*=/i.exec(line);
         if (propMatch) {
           const propName = propMatch[1];
@@ -276,7 +359,6 @@ class Circle(Shape):
           }
         }
         
-        // Find methods
         const methodMatch = /(?:def\s+(\w+)|(\w+)\s*\([^)]*\)\s*\{)/i.exec(line);
         if (methodMatch) {
           const methodName = methodMatch[1] || methodMatch[2];
@@ -288,7 +370,6 @@ class Circle(Shape):
     }
 
     if (classes.length === 0) {
-      // Fallback dummy classes if parse fails
       return `classDiagram
         class Animal {
           +name: string
@@ -322,12 +403,11 @@ class Circle(Shape):
   }
 
   // Recursion Tree compiler
-  function compileRecursionTree(code) {
-    // We will inspect code to see if it is Fibonacci or Factorial and draw a clean tree representing calls
+  function compileRecursionTree(code, orient = 'TD') {
     let isFib = /fibonacci/i.test(code) || /fib/i.test(code);
     
     if (isFib) {
-      return `graph TD
+      return `graph ${orient}
         f5("fibonacci(4)") --> f4("fibonacci(3)")
         f5 --> f3("fibonacci(2)")
         f4 --> f3_2("fibonacci(2)")
@@ -340,11 +420,14 @@ class Circle(Shape):
         style f5 fill:#6366f1,stroke:#a855f7,stroke-width:2px,color:#fff
         style f4 fill:#0f172a,stroke:#6366f1,color:#cbd5e1
         style f3 fill:#0f172a,stroke:#6366f1,color:#cbd5e1
+        style f3_2 fill:#0f172a,stroke:#6366f1,color:#cbd5e1
         style f2 fill:#022c22,stroke:#10b981,color:#a7f3d0
-        style f1 fill:#022c22,stroke:#10b981,color:#a7f3d0`;
+        style f1 fill:#022c22,stroke:#10b981,color:#a7f3d0
+        style f2_2 fill:#022c22,stroke:#10b981,color:#a7f3d0
+        style f2_3 fill:#022c22,stroke:#10b981,color:#a7f3d0
+        style f1_2 fill:#022c22,stroke:#10b981,color:#a7f3d0`;
     } else {
-      // Factorial recursion tree
-      return `graph TD
+      return `graph ${orient}
         f4("factorial(4)") --> f3("factorial(3)")
         f3 --> f2("factorial(2)")
         f2 --> f1("factorial(1)")
@@ -359,17 +442,15 @@ class Circle(Shape):
   }
 
   // Control flow flowchart compiler
-  function compileFlowchart(code) {
-    // Parse statements and branches
-    // Let's create a linear graph or standard flowchart matching arrMax or binary search
+  function compileFlowchart(code, orient = 'TD') {
     let isBinarySearch = /binary/i.test(code) || /low\s*<=/i.test(code);
     
     if (isBinarySearch) {
-      return `graph TD
-        Start(["Start: binary_search"]) --> Init["low = 0<br>high = len - 1"]
+      return `graph ${orient}
+        Start(["Start: binarySearch"]) --> Init["low = 0<br>high = len - 1"]
         Init --> Loop{"low <= high"}
-        Loop -- Yes --> Mid["mid = (low + high) // 2"]
-        Mid --> Cond1{"arr[mid] == target"}
+        Loop -- Yes --> Mid["mid = Math.floor(low + high / 2)"]
+        Mid --> Cond1{"arr[mid] === target"}
         Cond1 -- Yes --> RetMid(["return mid"])
         Cond1 -- No --> Cond2{"arr[mid] < target"}
         Cond2 -- Yes --> SetLow["low = mid + 1"]
@@ -385,8 +466,7 @@ class Circle(Shape):
         style RetMid fill:#022c22,stroke:#10b981,color:#a7f3d0
         style RetErr fill:#450a0a,stroke:#ef4444,color:#fca5a5`;
     } else {
-      // FindMax array search
-      return `graph TD
+      return `graph ${orient}
         Start(["Start: findMax"]) --> Init["max = arr[0]"]
         Init --> LoopInit["i = 1"]
         LoopInit --> Loop{"i < arr.length"}
@@ -410,14 +490,11 @@ class Circle(Shape):
     let complexity = 1;
     let astNodes = 0;
     
-    // Ast node calculator approximation
     const words = code.match(/[\w_]+/g) || [];
     const operators = code.match(/[+\-*\/=<>!&|]+/g) || [];
     astNodes = Math.floor(words.length * 1.5 + operators.length * 2.2 + 8);
     
-    // Cyclomatic complexity
     lines.forEach(line => {
-      // add count for control keywords
       const branches = line.match(/\b(if|elif|else\s+if|for|while|case|catch)\b/g);
       if (branches) {
         complexity += branches.length;
@@ -428,7 +505,6 @@ class Circle(Shape):
       }
     });
 
-    // Time/Space mapping
     let time = "O(1)";
     let timeDesc = "Constant execution flow";
     let space = "O(1)";
@@ -459,7 +535,6 @@ class Circle(Shape):
         depthDesc = "Linear recursive stack limit";
       }
     } else {
-      // flowchart modes
       let isBinary = /binary/i.test(code) || /low\s*<=/i.test(code);
       let hasLoops = /for|while/i.test(code);
       
@@ -469,7 +544,6 @@ class Circle(Shape):
         space = "O(1)";
         spaceDesc = "Constant variable references";
       } else if (hasLoops) {
-        // check nested loops
         const loopCount = (code.match(/for|while/gi) || []).length;
         if (loopCount > 1) {
           time = "O(N²)";
@@ -483,7 +557,6 @@ class Circle(Shape):
       }
     }
 
-    // Set UI stats
     statTime.textContent = time;
     statTimeDesc.textContent = timeDesc;
     statSpace.textContent = space;
@@ -493,7 +566,6 @@ class Circle(Shape):
     statAstNodes.textContent = astNodes;
     statCyclomatic.textContent = complexity;
     
-    // Cyclomatic descriptions
     let cycDesc = "Simple control path";
     if (complexity > 3) cycDesc = "Structured conditional paths";
     if (complexity > 7) cycDesc = "Complex nesting; consider refactoring";
@@ -512,17 +584,21 @@ class Circle(Shape):
       mode = autoDetectMode(code);
     }
 
-    // Render configuration metrics
     calculateMetrics(code, mode);
 
-    const mermaidStr = generateMermaidString(code, mode);
+    const theme = visThemeSelect.value;
+    const orient = visOrientSelect.value;
+
+    let mermaidStr = '';
+    if (theme && theme !== 'dark') {
+      mermaidStr += `%%{init: {'theme': '${theme}'}}%%\n`;
+    }
+    mermaidStr += generateMermaidString(code, mode, orient);
     
-    // Render Mermaid code
     diagramContainer.removeAttribute('data-processed');
     
     mermaid.parse(mermaidStr)
       .then(() => {
-        // Syntax is valid, safe to render
         const svgId = `mermaid-svg-${Date.now()}`;
         return mermaid.render(svgId, mermaidStr, diagramContainer);
       })
@@ -532,7 +608,8 @@ class Circle(Shape):
         canvasSpinner.classList.add('hidden');
         footerStatus.innerHTML = '<i class="fa-solid fa-circle-check text-success"></i> AST Healthy';
         
-        // Apply current zoom/pan transform
+        printConsole(`Successfully parsed AST. Rendered diagram type: ${mode.toUpperCase()} (Theme: ${theme}, Orientation: ${orient}).`, 'success');
+        
         applyTransform();
       })
       .catch(err => {
@@ -546,13 +623,15 @@ class Circle(Shape):
     canvasStatus.classList.remove('hidden');
     canvasMessageText.innerHTML = '<i class="fa-solid fa-circle-exclamation text-danger"></i> AST Compiler Error<br><small style="color:var(--text-muted);">Check code structures</small>';
     footerStatus.innerHTML = '<i class="fa-solid fa-circle-xmark text-danger"></i> Syntax Mismatch';
+    
+    printConsole("AST compilation failed: Syntax error or incompatible keywords.", "error");
   }
 
   // Compile Trigger Button
   runCodeBtn.addEventListener('click', () => {
+    printConsole("Manual re-compilation triggered.", "info");
     compileAndRender();
   });
-
 
   // --- Zoom and Pan Canvas Logic ---
   function applyTransform() {
@@ -576,7 +655,6 @@ class Circle(Shape):
     applyTransform();
   });
 
-  // Drag and pan controls for canvas viewport
   canvasViewport.addEventListener('mousedown', (e) => {
     if (e.target.closest('.canvas-toolbar') || e.target.closest('.canvas-message')) return;
     isDragging = true;
@@ -601,7 +679,6 @@ class Circle(Shape):
 
   canvasViewport.style.cursor = 'grab';
 
-
   // --- Code Editor Resize / Dragging Divider Logic ---
   const divider = document.querySelector('.pane-divider');
   const editorPane = document.querySelector('.editor-pane');
@@ -623,7 +700,6 @@ class Circle(Shape):
     const offsetLeft = e.clientX - rect.left;
     const widthPercentage = (offsetLeft / rect.width) * 100;
     
-    // Bounds check
     if (widthPercentage > 15 && widthPercentage < 80) {
       editorPane.style.flex = widthPercentage / 10;
       canvasPane.style.flex = (100 - widthPercentage) / 10;
@@ -634,14 +710,48 @@ class Circle(Shape):
     if (isResizing) {
       isResizing = false;
       document.body.style.cursor = '';
-      // Recalculate diagram layout
       compileAndRender();
     }
   });
 
+  // --- Bottom Terminal/Console Control Logic ---
+  btnToggleConsole.addEventListener('click', () => {
+    consolePanel.classList.toggle('collapsed');
+    const isCollapsed = consolePanel.classList.contains('collapsed');
+    btnToggleConsole.innerHTML = isCollapsed ? '<i class="fa-solid fa-chevron-up"></i>' : '<i class="fa-solid fa-chevron-down"></i>';
+    btnToggleConsole.title = isCollapsed ? 'Expand Terminal' : 'Minimize Terminal';
+  });
+
+  btnClearConsole.addEventListener('click', () => {
+    consoleViewport.innerHTML = '';
+    printConsole("Console log cleared.", "system");
+  });
+
+  consoleTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      consoleTabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      
+      const tabId = tab.id;
+      printConsole(`Switched output stream: ${tab.textContent.trim()}`, 'system');
+      
+      if (tabId === 'tab-problems') {
+        consoleViewport.innerHTML = '';
+        printConsole("No syntax errors or compilation conflicts detected in active workspace.", "success");
+      } else if (tabId === 'tab-output') {
+        consoleViewport.innerHTML = '';
+        printConsole(`--- Active AST Summary Statistics ---`, 'info');
+        printConsole(`AST parsed node nodes count: ${statAstNodes.textContent}`, 'info');
+        printConsole(`Estimated cyclomatic branch loops: ${statCyclomatic.textContent}`, 'info');
+        printConsole(`Maximum tree path recursion depth: ${statRecursion.textContent}`, 'info');
+      } else {
+        consoleViewport.innerHTML = '';
+        printConsole("LogicScope compiler telemetry logs streams online.", "info");
+      }
+    });
+  });
 
   // --- Initialization ---
-  // Initial load
-  loadCodeSample('javascript', 'flowchart');
-  compileAndRender();
+  printConsole("LogicScope offline compiler extension engine loaded.", "system");
+  selectFile('binarySearch.js');
 });

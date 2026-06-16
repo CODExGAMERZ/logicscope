@@ -106,13 +106,39 @@
           <!-- VS Code Left Activity Bar -->
           <aside class="vscode-activitybar">
             <div class="activity-top">
-              <div class="activity-item"><i class="fa-regular fa-copy"></i></div>
-              <div class="activity-item"><i class="fa-solid fa-magnifying-glass"></i></div>
-              <div class="activity-item"><i class="fa-solid fa-code-branch"></i></div>
-              <div class="activity-item active"><i class="fa-solid fa-diagram-project"></i></div>
+              <div class="activity-item active" title="File Explorer"><i class="fa-regular fa-copy"></i></div>
+              <div class="activity-item" title="Search"><i class="fa-solid fa-magnifying-glass"></i></div>
+              <div class="activity-item" title="Source Control"><i class="fa-solid fa-code-branch"></i></div>
+              <div class="activity-item" title="LogicScope Playground"><i class="fa-solid fa-diagram-project text-indigo"></i></div>
             </div>
             <div class="activity-bottom">
-              <div class="activity-item"><i class="fa-solid fa-gear"></i></div>
+              <div class="activity-item" title="Settings"><i class="fa-solid fa-gear"></i></div>
+            </div>
+          </aside>
+
+          <!-- VS Code Sidebar Explorer -->
+          <aside class="vscode-sidebar">
+            <div class="sidebar-header">
+              <span>EXPLORER</span>
+            </div>
+            <div class="sidebar-section">
+              <div class="section-title">
+                <i class="fa-solid fa-chevron-down"></i> SCOPE WORKSPACE
+              </div>
+              <ul class="file-tree" id="file-tree">
+                <li class="file-item active" data-file="binarySearch.js">
+                  <i class="fa-brands fa-js-square text-warning"></i>
+                  <span>binarySearch.js</span>
+                </li>
+                <li class="file-item" data-file="recursion_fib.py">
+                  <i class="fa-brands fa-python text-primary"></i>
+                  <span>recursion_fib.py</span>
+                </li>
+                <li class="file-item" data-file="linkedList_UML.js">
+                  <i class="fa-brands fa-js-square text-warning"></i>
+                  <span>linkedList_UML.js</span>
+                </li>
+              </ul>
             </div>
           </aside>
 
@@ -125,8 +151,8 @@
                 <div class="pane-header">
                   <span><i class="fa-solid fa-code text-muted"></i> Source Code</span>
                   <div class="editor-languages">
-                    <button class="lang-btn active" data-lang="javascript">JavaScript</button>
-                    <button class="lang-btn" data-lang="python">Python</button>
+                    <button class="lang-btn active" data-lang="javascript" id="lang-btn-js">JavaScript</button>
+                    <button class="lang-btn" data-lang="python" id="lang-btn-py">Python</button>
                   </div>
                 </div>
                 
@@ -167,13 +193,36 @@
                 </div>
               </div>
               
-              <!-- Right Sidebar: Complexity Stats -->
+              <!-- Right Sidebar: Controls & Metrics -->
               <aside class="sidebar-pane">
+                <div class="pane-header">
+                  <span><i class="fa-solid fa-sliders text-muted"></i> Render Options</span>
+                </div>
+                
+                <div class="sidebar-content border-bottom-1">
+                  <div class="settings-group">
+                    <label class="sidebar-label">Theme</label>
+                    <select class="sidebar-select" id="vis-theme-select">
+                      <option value="dark">Dark Theme</option>
+                      <option value="neutral">Neutral Theme</option>
+                      <option value="forest">Forest Theme</option>
+                      <option value="base">Dark Blue</option>
+                    </select>
+                  </div>
+                  <div class="settings-group">
+                    <label class="sidebar-label">Orientation</label>
+                    <select class="sidebar-select" id="vis-orient-select">
+                      <option value="TD">Top-Down (TD)</option>
+                      <option value="LR">Left-Right (LR)</option>
+                    </select>
+                  </div>
+                </div>
+
                 <div class="pane-header">
                   <span><i class="fa-solid fa-square-poll-vertical text-muted"></i> Metrics</span>
                 </div>
                 
-                <div class="sidebar-content">
+                <div class="sidebar-content overflow-auto flex-1">
                   <div class="stat-card">
                     <span class="label">Time Complexity</span>
                     <span class="value accent" id="stat-time">O(1)</span>
@@ -207,6 +256,25 @@
               </aside>
               
             </div>
+
+            <!-- Bottom Panel: Console/Terminal -->
+            <div class="console-panel" id="console-panel">
+              <div class="console-header" id="console-header">
+                <div class="console-tabs">
+                  <span class="console-tab-item active" id="tab-terminal"><i class="fa-solid fa-terminal"></i> Terminal</span>
+                  <span class="console-tab-item" id="tab-problems"><i class="fa-solid fa-circle-exclamation"></i> Problems (0)</span>
+                  <span class="console-tab-item" id="tab-output"><i class="fa-solid fa-square-rss"></i> AST Log</span>
+                </div>
+                <div class="console-controls">
+                  <button class="console-btn" id="btn-clear-console" title="Clear Console"><i class="fa-solid fa-ban"></i></button>
+                  <button class="console-btn" id="btn-toggle-console" title="Minimize Terminal"><i class="fa-solid fa-chevron-down"></i></button>
+                </div>
+              </div>
+              <div class="console-viewport" id="console-viewport">
+                <!-- Console lines -->
+              </div>
+            </div>
+
           </div>
         </div>
 
