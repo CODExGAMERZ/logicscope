@@ -84,18 +84,6 @@ LogicScope includes a standalone visualizer playground hosted as a vanilla HTML5
 
 It provides a real-time sandbox for writing Python/JavaScript code and rendering interactive Mermaid flowcharts, class UMLs, and recursion call trees directly inside any web browser.
 
-### Preview Locally
-To run the visualizer playground locally:
-1. Navigate to the extension directory.
-2. Serve the static `website` folder using any local server:
-   ```bash
-   npx serve website -l 5002
-   ```
-3. Open your browser to `http://localhost:5002` to test the visual compiler sandbox.
-
-### Vercel Deployment
-The repository includes a `vercel.json` config. You can import the repository directly into Vercel and it will host the static playground directory zero-config.
-
 ---
 
 ## License
