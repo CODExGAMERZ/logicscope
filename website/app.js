@@ -366,17 +366,17 @@ class Circle(Shape):
     
     if (isBinarySearch) {
       return `graph TD
-        Start([Start: binary_search]) --> Init["low = 0<br>high = len - 1"]
+        Start(["Start: binary_search"]) --> Init["low = 0<br>high = len - 1"]
         Init --> Loop{"low <= high"}
         Loop -- Yes --> Mid["mid = (low + high) // 2"]
         Mid --> Cond1{"arr[mid] == target"}
-        Cond1 -- Yes --> RetMid([return mid])
+        Cond1 -- Yes --> RetMid(["return mid"])
         Cond1 -- No --> Cond2{"arr[mid] < target"}
         Cond2 -- Yes --> SetLow["low = mid + 1"]
         Cond2 -- No --> SetHigh["high = mid - 1"]
         SetLow --> Loop
         SetHigh --> Loop
-        Loop -- No --> RetErr([return -1])
+        Loop -- No --> RetErr(["return -1"])
         
         style Start fill:#0f172a,stroke:#6366f1,color:#fff
         style Loop fill:#1e1b4b,stroke:#a855f7,color:#e9d5ff
@@ -387,7 +387,7 @@ class Circle(Shape):
     } else {
       // FindMax array search
       return `graph TD
-        Start([Start: findMax]) --> Init["max = arr[0]"]
+        Start(["Start: findMax"]) --> Init["max = arr[0]"]
         Init --> LoopInit["i = 1"]
         LoopInit --> Loop{"i < arr.length"}
         Loop -- Yes --> Cond{"arr[i] > max"}
@@ -395,7 +395,7 @@ class Circle(Shape):
         Cond -- No --> Inc["i++"]
         Assign --> Inc
         Inc --> Loop
-        Loop -- No --> Return([return max])
+        Loop -- No --> Return(["return max"])
         
         style Start fill:#0f172a,stroke:#6366f1,color:#fff
         style Loop fill:#1e1b4b,stroke:#a855f7,color:#e9d5ff
@@ -518,13 +518,15 @@ class Circle(Shape):
     const mermaidStr = generateMermaidString(code, mode);
     
     // Render Mermaid code
-    try {
-      diagramContainer.removeAttribute('data-processed');
-      
-      // Use unique SVG ID
-      const svgId = `mermaid-svg-${Date.now()}`;
-      
-      mermaid.render(svgId, mermaidStr, diagramContainer).then(({ svg }) => {
+    diagramContainer.removeAttribute('data-processed');
+    
+    mermaid.parse(mermaidStr)
+      .then(() => {
+        // Syntax is valid, safe to render
+        const svgId = `mermaid-svg-${Date.now()}`;
+        return mermaid.render(svgId, mermaidStr, diagramContainer);
+      })
+      .then(({ svg }) => {
         diagramContainer.innerHTML = svg;
         canvasStatus.classList.add('hidden');
         canvasSpinner.classList.add('hidden');
@@ -532,15 +534,11 @@ class Circle(Shape):
         
         // Apply current zoom/pan transform
         applyTransform();
-      }).catch(err => {
-        console.error(err);
+      })
+      .catch(err => {
+        console.error("Mermaid Parse/Render Error:", err);
         handleCompileError();
       });
-
-    } catch (err) {
-      console.error(err);
-      handleCompileError();
-    }
   }
 
   function handleCompileError() {
